@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.views import APIView
+
 from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
 
 
@@ -34,7 +36,7 @@ class SnippetSerializer2(serializers.ModelSerializer):
             fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
 
 
-class SnippetSerializer3(serializers.BaseSerializer):
+class SnippetSerializer3(serializers.ModelSerializer):
     title = serializers.CharField(allow_blank=True, max_length=100, required=False)
     code = serializers.CharField(style={'base_template': 'textarea.html'})
     linenos = serializers.BooleanField(required=False)
