@@ -1,16 +1,18 @@
 from django.http import HttpResponse, JsonResponse, Http404
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status, generics
+from rest_framework import status, generics, renderers
 from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-
+from django.contrib.auth.models import User
 from snippets.models import Snippet
 from snippets.serializers.snippetSerializer import SnippetSerializer2, SnippetSerializer3, SnippetSerializer
+from snippets.serializers.userSerializer import UserSerializer
 
 
 @csrf_exempt
@@ -112,10 +114,12 @@ class SnippetsList(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class SnippetDetail(APIView):
     """
     获取，更新或删除一个代码 snippet
     """
+
     def get_object(self, pk):
         try:
             return Snippet.objects.get(pk=pk)
@@ -149,3 +153,33 @@ class SnippetsList5(generics.ListCreateAPIView):
 class SnippetsDetail5(generics.RetrieveUpdateDestroyAPIView):
     queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
+
+
+class UserList(generics.ListAPIView):
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response({
+        'users': reverse('user-list', request=request, format=format),
+        'snippets': reverse('snippet-list', request=request, format=format)
+    })
+
+
+class SnippetHighlight(generics.GenericAPIView):
+    queryset = Snippet.objects.all()
+    renderer_classes = (renderers.StaticHTMLRenderer,)
+
+    def get(self, request, *args, **kwargs):
+        snippet = self.get_object()
+        return Response(snippet.highlighted)

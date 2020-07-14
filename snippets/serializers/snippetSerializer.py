@@ -26,6 +26,7 @@ class SnippetSerializer(serializers.Serializer):
 
 
 class SnippetSerializer2(serializers.ModelSerializer):
+
     title = serializers.CharField(allow_blank=True, max_length=100, required=False)
     code = serializers.CharField(style={'base_template': 'textarea.html'})
     linenos = serializers.BooleanField(required=False)
@@ -37,7 +38,9 @@ class SnippetSerializer2(serializers.ModelSerializer):
 
 
 class SnippetSerializer3(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
     title = serializers.CharField(allow_blank=True, max_length=100, required=False)
+
     code = serializers.CharField(style={'base_template': 'textarea.html'})
     linenos = serializers.BooleanField(required=False)
     language = serializers.ChoiceField(choices=[('abap', 'ABAP'), ('abnf', 'ABNF'), ('ada', 'Ada'), ..., ('zephir', 'Zephir')], default='python')
@@ -45,3 +48,13 @@ class SnippetSerializer3(serializers.ModelSerializer):
     class Meta:
         model = Snippet
         fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
+
+
+class SnippetSerializer4(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+    highlight = serializers.HyperlinkedIdentityField(view_name='snippet-highlight', format='html')
+
+    class Meta:
+        model = Snippet
+        fields = ('url', 'id', 'highlight', 'owner',
+                  'title', 'code', 'linenos', 'language', 'style')
